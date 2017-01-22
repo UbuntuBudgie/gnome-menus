@@ -1,0 +1,101 @@
+# Description: revert dropping of gnome-control-center categories, they got
+# deprecated in g-c-c 3.8 but we are still using 3.6. We can drop those 
+# changes once we do the update.
+# Ubuntu: https://bugs.launchpad.net/ubuntu/+source/gnome-menus/+bug/1232534
+Index: gnome-menus-3.13.3/desktop-directories/Hardware.directory.in
+===================================================================
+--- /dev/null
++++ gnome-menus-3.13.3/desktop-directories/Hardware.directory.in
+@@ -0,0 +1,5 @@
++[Desktop Entry]
++_Name=Hardware
++_Comment=Settings for several hardware devices
++Icon=preferences-desktop-peripherals
++Type=Directory
+Index: gnome-menus-3.13.3/desktop-directories/Makefile.am
+===================================================================
+--- gnome-menus-3.13.3.orig/desktop-directories/Makefile.am
++++ gnome-menus-3.13.3/desktop-directories/Makefile.am
+@@ -1,5 +1,11 @@
+ directorydir = $(datadir)/desktop-directories
+ 
++# Should be moved to gnome-control-center:
++directory_in_controlcenterfiles =		\
++	Hardware.directory.in			\
++	Personal.directory.in			\
++	System.directory.in
++
+ directory_in_files =				\
+ 	AudioVideo.directory.in			\
+ 	Development.directory.in		\
+@@ -16,7 +22,8 @@ directory_in_files =				\
+ 	X-GNOME-Sundry.directory.in 		\
+ 	X-GNOME-Utilities.directory.in 		\
+ 	X-GNOME-WebApplications.directory.in 	\
+-	X-GNOME-SystemSettings.directory.in
++	X-GNOME-SystemSettings.directory.in	\
++	$(directory_in_controlcenterfiles)
+ 
+ directory_DATA = $(directory_in_files:.directory.in=.directory)
+ 
+Index: gnome-menus-3.13.3/desktop-directories/Makefile.in
+===================================================================
+--- gnome-menus-3.13.3.orig/desktop-directories/Makefile.in
++++ gnome-menus-3.13.3/desktop-directories/Makefile.in
+@@ -305,6 +305,13 @@ top_build_prefix = @top_build_prefix@
+ top_builddir = @top_builddir@
+ top_srcdir = @top_srcdir@
+ directorydir = $(datadir)/desktop-directories
++
++# Should be moved to gnome-control-center:
++directory_in_controlcenterfiles = \
++	Hardware.directory.in			\
++	Personal.directory.in			\
++	System.directory.in
++
+ directory_in_files = \
+ 	AudioVideo.directory.in			\
+ 	Development.directory.in		\
+@@ -321,7 +328,8 @@ directory_in_files = \
+ 	X-GNOME-Sundry.directory.in 		\
+ 	X-GNOME-Utilities.directory.in 		\
+ 	X-GNOME-WebApplications.directory.in 	\
+-	X-GNOME-SystemSettings.directory.in
++	X-GNOME-SystemSettings.directory.in	\
++	$(directory_in_controlcenterfiles)
+ 
+ directory_DATA = $(directory_in_files:.directory.in=.directory)
+ EXTRA_DIST = $(directory_in_files)
+Index: gnome-menus-3.13.3/desktop-directories/Personal.directory.in
+===================================================================
+--- /dev/null
++++ gnome-menus-3.13.3/desktop-directories/Personal.directory.in
+@@ -0,0 +1,6 @@
++[Desktop Entry]
++# Translators: this is Personal as in "Personal settings"
++_Name=Personal
++_Comment=Personal settings
++Icon=preferences-desktop-personal
++Type=Directory
+Index: gnome-menus-3.13.3/desktop-directories/System.directory.in
+===================================================================
+--- /dev/null
++++ gnome-menus-3.13.3/desktop-directories/System.directory.in
+@@ -0,0 +1,5 @@
++[Desktop Entry]
++_Name=System
++_Comment=System settings
++Icon=preferences-system
++Type=Directory
+Index: gnome-menus-3.13.3/po/POTFILES.in
+===================================================================
+--- gnome-menus-3.13.3.orig/po/POTFILES.in
++++ gnome-menus-3.13.3/po/POTFILES.in
+@@ -31,3 +31,7 @@ debian/desktop-files/Settings.directory.
+ debian/desktop-files/SimulationGames.directory.in
+ debian/desktop-files/SportsGames.directory.in
+ debian/desktop-files/StrategyGames.directory.in
++desktop-directories/Hardware.directory.in
++desktop-directories/Personal.directory.in
++desktop-directories/System.directory.in
++

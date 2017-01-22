@@ -1,0 +1,84 @@
+Description: immediate .desktop handling for budgie-desktop
+ budgie-desktop crashes when updating/installing or removing applications.
+ This patch reintroduces the original upstream .desktop handling
+ specifically for budgie-desktop without affecting any other window
+ managers using the library.
+Author: David Mohammed <fossfreedom@ubuntu.com>
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/1631745
+Forwarded: not-needed
+Last-Update: 2017-01-22
+
+Index: gnome-menus-3.13.3/libmenu/menu-monitor.c
+===================================================================
+--- gnome-menus-3.13.3.orig/libmenu/menu-monitor.c
++++ gnome-menus-3.13.3/libmenu/menu-monitor.c
+@@ -26,6 +26,10 @@
+ 
+ #include "menu-util.h"
+ 
++#include <stdlib.h>
++
++#include <string.h>
++
+ struct MenuMonitor
+ {
+   char  *path;
+@@ -214,6 +218,44 @@ monitor_callback_delayed (gpointer user_
+ }
+ 
+ static gboolean
++monitor_orig_callback (GFileMonitor      *monitor,
++                  GFile             *child,
++                  GFile             *other_file,
++                  GFileMonitorEvent eflags,
++                  gpointer          user_data)
++{
++  MenuMonitorEventInfo *event_info;
++  MenuMonitorEvent      event;
++  MenuMonitor          *menu_monitor = (MenuMonitor *) user_data;
++
++  event = MENU_MONITOR_EVENT_INVALID;
++  switch (eflags)
++    {
++    case G_FILE_MONITOR_EVENT_CHANGED:
++      event = MENU_MONITOR_EVENT_CHANGED;
++      break;
++    case G_FILE_MONITOR_EVENT_CREATED:
++      event = MENU_MONITOR_EVENT_CREATED;
++      break;
++    case G_FILE_MONITOR_EVENT_DELETED:
++      event = MENU_MONITOR_EVENT_DELETED;
++      break;
++    default:
++      return TRUE;
++    }
++
++  event_info = g_new0 (MenuMonitorEventInfo, 1);
++
++  event_info->path    = g_file_get_path (child);
++  event_info->event   = event;
++  event_info->monitor = menu_monitor;
++
++  menu_monitor_queue_event (event_info);
++
++  return TRUE;
++}
++
++static gboolean
+ monitor_callback (GFileMonitor      *monitor,
+                   GFile             *child,
+                   GFile             *other_file,
+@@ -225,6 +267,13 @@ monitor_callback (GFileMonitor      *mon
+ 
+   menu_monitor = (MenuMonitor *) user_data;
+ 
++  const char* session = g_getenv("DESKTOP_SESSION");
++
++  if (strcmp("budgie-desktop", session) == 0)
++    {
++      return monitor_orig_callback(monitor, child, other_file, eflags, user_data);
++    }
++
+   info = g_new0 (MonitorCallbackInfo, 1);
+   info->menu_monitor = menu_monitor;
+   info->weak_ptr = G_OBJECT (menu_monitor->monitor);
